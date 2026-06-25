@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>thysummer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1a2e;--parchment:#f5f0e8;--rose:#c9748f;--sage:#7a9e7e;--gold:#c9a84c;--muted:#8a8070;--surface:#fffdf8;--border:#e8e0d0;--ink-light:#2e2e4a;}
+[data-theme="night"]{--ink:#1a0a2e;--parchment:#f0eaf8;--rose:#9b72cf;--sage:#7e9ecf;--gold:#c9a84c;--muted:#8a7a9a;--surface:#faf8ff;--border:#e0d8f0;--ink-light:#2e1a4a;}
+[data-theme="desert"]{--ink:#2d1e0f;--parchment:#faf3e0;--rose:#c9744c;--sage:#9e8a5e;--gold:#c9a84c;--muted:#9a8a70;--surface:#fffbf0;--border:#e8dcc0;--ink-light:#3e2a1a;}
+[data-theme="ocean"]{--ink:#0a1e2e;--parchment:#e8f4f8;--rose:#4c9ec9;--sage:#4caf7e;--gold:#4c8ec9;--muted:#6a8a9a;--surface:#f0f8ff;--border:#c8e0f0;--ink-light:#1a2e4a;}
+[data-theme="emerald"]{--ink:#0a1e14;--parchment:#e8f8ef;--rose:#c9748f;--sage:#2d8a5e;--gold:#4ca87e;--muted:#6a8a7a;--surface:#f0fff5;--border:#c8e8d8;--ink-light:#1a3a24;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--ink);font-family:'Inter',sans-serif;color:var(--ink);overflow:hidden;}
+#app{height:100dvh;display:flex;flex-direction:column;background:var(--parchment);max-width:430px;margin:0 auto;position:relative;overflow:hidden;}
+
+/* HEADER */
+header{background:var(--ink);padding:18px 20px 14px;flex-shrink:0;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-end;}
+.app-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--parchment);letter-spacing:-0.5px;}
+.app-name span{color:var(--gold);}
+.header-right{display:flex;align-items:flex-end;gap:8px;}
+.date-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;font-weight:400;padding-bottom:2px;}
+.icon-btn{background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.55);font-size:13px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.edit-toggle{background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.55);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;padding:4px 9px;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;}
+.edit-toggle.active{background:var(--rose);border-color:var(--rose);color:white;}
+
+/* NAV */
+nav{display:flex;background:var(--ink);padding:0 20px 16px;gap:6px;flex-shrink:0;}
+.tab-btn{flex:1;padding:8px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:transparent;color:rgba(255,255,255,0.45);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.tab-btn.active{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600;}
+
+/* PAGES */
+.page{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;}
+.page.active{display:flex;}
+.page::-webkit-scrollbar{width:0;}
+
+/* TRACKER */
+.tracker-intro{padding:16px 20px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tracker-intro h2{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;}
+.tracker-intro p{font-size:12px;color:var(--muted);margin-top:3px;}
+.progress-wrap{padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.progress-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.4px;}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));border-radius:2px;transition:width 0.4s ease;width:0%;}
+
+/* TIMELINE */
+.timeline{padding:8px 0 4px;flex:1;}
+.time-block{display:flex;align-items:stretch;padding:0 20px;min-height:56px;position:relative;}
+.time-block:not(.edit-mode):active{background:rgba(0,0,0,0.03);cursor:pointer;}
+.time-block.done .block-label{opacity:0.45;text-decoration:line-through;text-decoration-color:var(--rose);}
+.time-block.done .time-stamp{opacity:0.4;}
+.time-col{width:54px;padding-top:14px;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;padding-right:10px;gap:1px;}
+.time-stamp{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.2px;line-height:1;}
+.time-ampm{font-size:9px;color:var(--muted);opacity:0.7;font-weight:400;}
+.ribbon-col{width:28px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:14px;}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--surface);flex-shrink:0;transition:all 0.2s;z-index:1;}
+.time-block.done .dot{background:var(--sage);border-color:var(--sage);}
+.time-block.class-block .dot{border-color:var(--rose);}
+.time-block.class-block.done .dot{background:var(--rose);border-color:var(--rose);}
+.time-block.travel-block .dot{border-color:var(--gold);}
+.time-block.travel-block.done .dot{background:var(--gold);border-color:var(--gold);}
+.time-block.deen .dot{border-color:#6a8aba;}
+.time-block.deen.done .dot{background:#6a8aba;border-color:#6a8aba;}
+.time-block.read .dot{border-color:#9a7aba;}
+.time-block.read.done .dot{background:#9a7aba;border-color:#9a7aba;}
+.ribbon-line{flex:1;width:2px;background:var(--border);min-height:8px;margin-top:2px;}
+.block-content{flex:1;padding:10px 0 10px 10px;display:flex;flex-direction:column;justify-content:center;border-bottom:1px solid var(--border);}
+.time-block:last-child .block-content{border-bottom:none;}
+.block-tag{font-size:9px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;padding:2px 6px;border-radius:4px;width:fit-content;margin-bottom:4px;}
+.tag-class{background:rgba(201,116,143,0.15);color:var(--rose);}
+.tag-study{background:rgba(122,158,126,0.15);color:var(--sage);}
+.tag-travel{background:rgba(201,168,76,0.15);color:var(--gold);}
+.tag-rest{background:rgba(138,128,112,0.15);color:var(--muted);}
+.tag-pilates{background:rgba(122,158,126,0.18);color:var(--sage);}
+.tag-deen{background:rgba(106,138,186,0.18);color:#4a6a9a;}
+.tag-read{background:rgba(154,122,186,0.15);color:#7a4a9a;}
+.block-label{font-size:14px;font-weight:500;color:var(--ink);line-height:1.3;transition:opacity 0.2s;}
+.block-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* EDIT ROW */
+.edit-row{display:none;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.edit-mode .edit-row{display:flex;}
+.edit-mode .block-label,.edit-mode .block-sub,.edit-mode .block-tag{display:none;}
+.edit-input{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Inter',sans-serif;font-size:12px;background:white;color:var(--ink);outline:none;transition:border 0.15s;}
+.edit-input:focus{border-color:var(--rose);}
+.edit-input.inp-label{flex:1;min-width:80px;font-weight:500;}
+.edit-input.inp-sub{flex:1;min-width:80px;color:var(--muted);}
+.edit-input.inp-time{width:52px;}
+.edit-select{border:1px solid var(--border);border-radius:6px;padding:5px 4px;font-family:'Inter',sans-serif;font-size:11px;background:white;color:var(--ink);outline:none;}
+.del-btn{background:none;border:1px solid rgba(201,116,143,0.3);border-radius:6px;color:var(--rose);font-size:14px;width:28px;height:28px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+
+/* ADD BLOCK */
+.add-block-btn{display:none;margin:8px 20px;padding:11px;border:1.5px dashed var(--rose);border-radius:10px;background:rgba(201,116,143,0.05);color:var(--rose);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;width:calc(100% - 40px);letter-spacing:0.3px;}
+.editing .add-block-btn{display:block;}
+.reset-btn{margin:0 20px 24px;padding:12px;border:1.5px dashed var(--border);border-radius:10px;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;width:calc(100% - 40px);}
+
+/* SUB TABS */
+.sub-tabs{display:flex;padding:14px 20px 0;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);gap:4px;}
+.sub-tab{flex:1;padding:10px 4px;border:none;border-bottom:2.5px solid transparent;background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.2s;text-align:center;}
+.sub-tab.active{color:var(--ink);border-bottom-color:var(--rose);font-weight:600;}
+.sub-page{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.sub-page.active{display:block;}
+.sub-page::-webkit-scrollbar{width:0;}
+
+/* ELEVATE */
+.elevate-header{padding:18px 20px 10px;}
+.elevate-header h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;}
+.elevate-header p{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.elevate-category{padding:16px 20px 4px;}
+.cat-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.elevate-grid{display:flex;flex-direction:column;gap:4px;margin-bottom:6px;}
+.elevate-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;position:relative;}
+.elevate-item:active{transform:scale(0.99);}
+.elevate-item.done{opacity:0.45;}
+.elevate-item.done .ei-text{text-decoration:line-through;}
+.ei-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.elevate-item.done .ei-check{background:var(--sage);border-color:var(--sage);}
+.ei-check-inner{display:none;width:8px;height:8px;background:white;border-radius:50%;}
+.elevate-item.done .ei-check-inner{display:block;}
+.ei-text{font-size:13px;color:var(--ink);font-weight:400;line-height:1.3;flex:1;}
+.ei-emoji{font-size:14px;flex-shrink:0;}
+.ei-del{display:none;background:none;border:none;color:var(--rose);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;}
+.editing .ei-del{display:block;}
+.editing .elevate-item{cursor:default;}
+.ei-edit-input{display:none;flex:1;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:'Inter',sans-serif;font-size:12px;background:white;outline:none;}
+.ei-edit-input:focus{border-color:var(--rose);}
+.editing .ei-text{display:none;}
+.editing .ei-edit-input{display:block;}
+.add-elevate-btn{display:none;margin:4px 20px;width:calc(100% - 40px);padding:10px;border:1.5px dashed var(--rose);border-radius:8px;background:rgba(201,116,143,0.05);color:var(--rose);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.editing .add-elevate-btn{display:block;}
+.add-cat-btn{display:none;margin:8px 20px 16px;width:calc(100% - 40px);padding:10px;border:1.5px dashed var(--gold);border-radius:8px;background:rgba(201,168,76,0.05);color:#8a6010;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.editing .add-cat-btn{display:block;}
+.cat-name-edit{display:none;border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;background:white;outline:none;width:130px;}
+.editing .cat-label-text{display:none;}
+.editing .cat-name-edit{display:inline-block;}
+.cat-del-btn{display:none;background:none;border:none;color:var(--rose);font-size:13px;cursor:pointer;padding:2px;}
+.editing .cat-del-btn{display:block;}
+
+/* STUDY */
+.study-header{padding:18px 20px 10px;border-bottom:1px solid var(--border);}
+.study-header h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;}
+.study-header p{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.study-subject{padding:16px 20px 8px;}
+.subject-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.subject-pill{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+.pill-ds{background:rgba(201,116,143,0.15);color:var(--rose);}
+.pill-bd{background:rgba(201,168,76,0.15);color:#8a6010;}
+.pill-habit{background:rgba(122,158,126,0.15);color:var(--sage);}
+.subject-weeks{font-size:11px;color:var(--muted);}
+.study-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;margin-bottom:5px;}
+.study-item:active{transform:scale(0.99);}
+.study-item.done{opacity:0.4;}
+.study-item.done .si-title{text-decoration:line-through;}
+.si-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.2s;font-size:11px;color:transparent;}
+.study-item.done .si-check{background:var(--rose);border-color:var(--rose);color:white;}
+.si-body{flex:1;min-width:0;}
+.si-title{font-size:13px;font-weight:500;color:var(--ink);line-height:1.3;}
+.si-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.si-tag{font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px;margin-top:4px;width:fit-content;display:inline-block;}
+.si-tag-video{background:rgba(201,116,143,0.12);color:var(--rose);}
+.si-tag-practice{background:rgba(122,158,126,0.12);color:var(--sage);}
+.si-tag-read{background:rgba(201,168,76,0.12);color:#8a6010;}
+.si-tag-drill{background:rgba(46,46,74,0.1);color:var(--ink-light);}
+.si-del{display:none;background:none;border:none;color:var(--rose);font-size:16px;cursor:pointer;flex-shrink:0;padding:2px 4px;margin-top:-1px;}
+.editing .si-del{display:block;}
+.editing .study-item{cursor:default;}
+.si-edit-wrap{display:none;flex-direction:column;gap:4px;flex:1;}
+.si-edit-input{border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:'Inter',sans-serif;font-size:12px;background:white;outline:none;width:100%;}
+.si-edit-input:focus{border-color:var(--rose);}
+.editing .si-body{display:none;}
+.editing .si-edit-wrap{display:flex;}
+.add-study-btn{display:none;margin:4px 0;width:100%;padding:10px;border:1.5px dashed var(--rose);border-radius:8px;background:rgba(201,116,143,0.05);color:var(--rose);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.editing .add-study-btn{display:block;}
+
+/* DEEN PAGE */
+.deen-header{padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.deen-header h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;}
+.deen-header .hijri-date{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* HIFDH */
+.hifdh-section{padding:16px 20px;}
+.hifdh-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.hifdh-sub{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.hifdh-goal-card{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;}
+.hifdh-big{font-family:'Playfair Display',serif;font-size:40px;font-weight:700;color:var(--gold);line-height:1;}
+.hifdh-goal-meta{flex:1;}
+.hifdh-goal-label{font-size:13px;font-weight:600;color:var(--ink);}
+.hifdh-goal-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.hifdh-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px;}
+.hifdh-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--sage));border-radius:3px;transition:width 0.4s;}
+.surah-list{display:flex;flex-direction:column;gap:6px;}
+.surah-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);}
+.surah-num{font-size:10px;font-weight:600;color:var(--muted);width:22px;text-align:center;flex-shrink:0;}
+.surah-name{flex:1;min-width:0;}
+.surah-name-en{font-size:13px;font-weight:500;color:var(--ink);}
+.surah-name-ar{font-size:11px;color:var(--muted);direction:rtl;}
+.surah-ayahs{font-size:10px;color:var(--muted);}
+.surah-status-btn{padding:4px 8px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;}
+.s-not{background:var(--border);color:var(--muted);}
+.s-mem{background:rgba(201,168,76,0.2);color:#8a6010;}
+.s-rev{background:rgba(122,158,126,0.2);color:var(--sage);}
+.s-done{background:rgba(122,158,126,0.35);color:#2a6a3a;}
+.surah-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:2px 4px;flex-shrink:0;}
+.add-surah-btn{margin-top:10px;width:100%;padding:10px;border:1.5px dashed var(--gold);border-radius:8px;background:rgba(201,168,76,0.05);color:#8a6010;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+
+/* WIRD */
+.wird-section{padding:16px 20px;}
+.wird-day-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px;}
+.wird-group{margin-bottom:14px;}
+.wird-group-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.wird-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;margin-bottom:4px;transition:all 0.15s;}
+.wird-item.done{opacity:0.5;}
+.wird-item.done .wi-text{text-decoration:line-through;}
+.wi-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:10px;color:transparent;}
+.wird-item.done .wi-check{background:var(--sage);border-color:var(--sage);color:white;}
+.wi-text{font-size:13px;color:var(--ink);flex:1;}
+.wi-ar{font-size:11px;color:var(--muted);direction:rtl;}
+.wi-count{font-size:10px;color:var(--muted);flex-shrink:0;}
+.wird-progress{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.wird-reset{margin-top:10px;width:100%;padding:10px;border:1.5px dashed var(--border);border-radius:8px;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;}
+
+/* HIJRI CALENDAR */
+.cal-section{padding:16px 20px;}
+.cal-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.cal-sub{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.month-nav-title{text-align:center;}
+.month-nav-title .greg{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;}
+.month-nav-title .hijri-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-btn{background:none;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px;}
+.cal-dh{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);text-align:center;padding:4px 0;}
+.cal-day{border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;position:relative;cursor:default;min-height:36px;}
+.cal-day .g{font-size:12px;color:var(--ink);}
+.cal-day .h{font-size:8px;color:var(--muted);}
+.cal-day.today{background:var(--ink);}
+.cal-day.today .g{color:var(--parchment);}
+.cal-day.today .h{color:rgba(255,255,255,0.5);}
+.cal-day.has-event::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--gold);}
+.cal-day.event-rose::after{background:var(--rose);}
+.events-list{margin-top:4px;}
+.event-section-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.event-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.event-item:last-child{border-bottom:none;}
+.event-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.ev-gold{background:var(--gold);}
+.ev-rose{background:var(--rose);}
+.ev-sage{background:var(--sage);}
+.event-info .ev-name{font-size:13px;font-weight:500;color:var(--ink);}
+.event-info .ev-ar{font-size:12px;color:var(--muted);direction:rtl;}
+.event-info .ev-date{font-size:11px;color:var(--muted);margin-top:2px;}
+.event-info .ev-desc{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px;}
+
+/* PALETTE PANEL */
+.palette-panel{display:none;position:absolute;top:60px;right:12px;background:var(--ink);border-radius:12px;padding:10px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.palette-panel.open{display:flex;flex-direction:column;gap:6px;}
+.pal-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);}
+.pal-opt.selected{border-color:var(--gold);}
+.pal-swatches{display:flex;gap:3px;}
+.swatch{width:11px;height:11px;border-radius:50%;}
+.pal-name{font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:18px 18px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;max-height:80vh;overflow-y:auto;}
+.modal h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:16px;}
+.modal-field{margin-bottom:12px;}
+.modal-field label{font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.modal-field input,.modal-field select{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;background:white;outline:none;color:var(--ink);}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--rose);}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+.modal-btn{flex:1;padding:12px;border-radius:10px;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.modal-btn.confirm{background:var(--rose);color:white;}
+.modal-btn.cancel{background:var(--border);color:var(--muted);}
+.surah-search-inp{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:10px;}
+.surah-search-inp:focus{border-color:var(--rose);}
+.surah-select-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.ssi{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--surface);}
+.ssi.sel{border-color:var(--gold);background:rgba(201,168,76,0.07);}
+.ssi-en{font-size:13px;font-weight:500;color:var(--ink);}
+.ssi-ar{font-size:12px;color:var(--muted);direction:rtl;}
+.ssi-meta{font-size:10px;color:var(--muted);}
+.spacer{height:32px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-top">
+      <div class="app-name">thy<span>summer</span></div>
+      <div class="header-right">
+        <div class="date-label" id="dateLabel"></div>
+        <button class="icon-btn" onclick="togglePalette()" title="Theme">🎨</button>
+        <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏ Edit</button>
+      </div>
+    </div>
+  </header>
+  <nav>
+    <button class="tab-btn active" onclick="switchPage('day',this)">Day</button>
+    <button class="tab-btn" onclick="switchPage('elevate',this)">Elevate</button>
+    <button class="tab-btn" onclick="switchPage('deen',this)">☽ Deen</button>
+  </nav>
+
+  <div class="palette-panel" id="palettePanel">
+    <div class="pal-opt" onclick="setPalette('')"><div class="pal-swatches"><div class="swatch" style="background:#1a1a2e"></div><div class="swatch" style="background:#c9748f"></div><div class="swatch" style="background:#7a9e7e"></div><div class="swatch" style="background:#c9a84c"></div></div><span class="pal-name">Parchment</span></div>
+    <div class="pal-opt" onclick="setPalette('night')"><div class="pal-swatches"><div class="swatch" style="background:#1a0a2e"></div><div class="swatch" style="background:#9b72cf"></div><div class="swatch" style="background:#7e9ecf"></div><div class="swatch" style="background:#c9a84c"></div></div><span class="pal-name">Night Garden</span></div>
+    <div class="pal-opt" onclick="setPalette('desert')"><div class="pal-swatches"><div class="swatch" style="background:#2d1e0f"></div><div class="swatch" style="background:#c9744c"></div><div class="swatch" style="background:#9e8a5e"></div><div class="swatch" style="background:#c9a84c"></div></div><span class="pal-name">Desert</span></div>
+    <div class="pal-opt" onclick="setPalette('ocean')"><div class="pal-swatches"><div class="swatch" style="background:#0a1e2e"></div><div class="swatch" style="background:#4c9ec9"></div><div class="swatch" style="background:#4caf7e"></div><div class="swatch" style="background:#4c8ec9"></div></div><span class="pal-name">Ocean</span></div>
+    <div class="pal-opt" onclick="setPalette('emerald')"><div class="pal-swatches"><div class="swatch" style="background:#0a1e14"></div><div class="swatch" style="background:#c9748f"></div><div class="swatch" style="background:#2d8a5e"></div><div class="swatch" style="background:#4ca87e"></div></div><span class="pal-name">Emerald</span></div>
+  </div>
+
+  <!-- PAGE: DAY -->
+  <div class="page active" id="page-day">
+    <div class="tracker-intro" style="flex-shrink:0">
+      <h2>Today's rhythm</h2>
+      <p>Tap to mark done · Edit mode to adjust or add blocks</p>
+    </div>
+    <div class="progress-wrap" style="flex-shrink:0">
+      <div class="progress-meta"><span>Progress</span><span id="progressLabel">0 / 0 done</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+    <button class="add-block-btn" onclick="openAddBlock()">+ Add time block</button>
+    <button class="reset-btn" onclick="resetDay()">↺ Reset day</button>
+  </div>
+
+  <!-- PAGE: ELEVATE & STUDY -->
+  <div class="page" id="page-elevate" style="flex-direction:column">
+    <div class="sub-tabs" style="flex-shrink:0">
+      <button class="sub-tab active" id="eTab1" onclick="switchSub('page-elevate','sub-elevate','eTab1')">✦ Elevate</button>
+      <button class="sub-tab" id="eTab2" onclick="switchSub('page-elevate','sub-study','eTab2')">◈ Study</button>
+    </div>
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="sub-page active" id="sub-elevate">
+        <div class="elevate-header">
+          <h2>Things worth doing</h2>
+          <p>Instagram is gone. This is what fills that space. Pick one a day — or three.</p>
+        </div>
+        <div id="elevate-content"></div>
+        <button class="add-cat-btn" onclick="addCategory()">+ Add category</button>
+        <div class="spacer"></div>
+      </div>
+      <div class="sub-page" id="sub-study">
+        <div class="study-header">
+          <h2>The study path</h2>
+          <p>10 weeks. Two subjects. Work through these in order.</p>
+        </div>
+        <div id="study-content"></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: DEEN -->
+  <div class="page" id="page-deen" style="flex-direction:column">
+    <div class="deen-header">
+      <h2>☽ الدِّين</h2>
+      <div class="hijri-date" id="hijriDate"></div>
+    </div>
+    <div class="sub-tabs" style="flex-shrink:0">
+      <button class="sub-tab active" id="dTab1" onclick="switchSub('page-deen','deen-hifdh','dTab1')">📖 Hifdh</button>
+      <button class="sub-tab" id="dTab2" onclick="switchSub('page-deen','deen-wird','dTab2')">🌿 Wird</button>
+      <button class="sub-tab" id="dTab3" onclick="switchSub('page-deen','deen-cal','dTab3')">🗓 Dates</button>
+    </div>
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="sub-page active" id="deen-hifdh">
+        <div class="hifdh-section">
+          <div class="hifdh-title">Summer Hifdh Goal</div>
+          <div class="hifdh-sub">6 new surahs before September. One at a time.</div>
+          <div class="hifdh-goal-card">
+            <div class="hifdh-big" id="hifdhCount">0</div>
+            <div class="hifdh-goal-meta">
+              <div class="hifdh-goal-label" id="hifdhLabel">0 of 6 surahs done</div>
+              <div class="hifdh-goal-sub">Tap status to cycle: memorizing → reviewing → done</div>
+              <div class="hifdh-bar"><div class="hifdh-bar-fill" id="hifdhBar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="surah-list" id="surahList"></div>
+          <button class="add-surah-btn" onclick="openSurahModal()">+ Add surah to track</button>
+        </div>
+        <div class="spacer"></div>
+      </div>
+      <div class="sub-page" id="deen-wird">
+        <div class="wird-section" id="wirdContent"></div>
+        <div class="spacer"></div>
+      </div>
+      <div class="sub-page" id="deen-cal">
+        <div class="cal-section">
+          <div class="cal-title">Hijri Calendar</div>
+          <div class="cal-sub">Navigate months · see Islamic dates alongside</div>
+          <div id="hijriCal"></div>
+          <div class="events-list" id="eventsList"></div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BLOCK MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add time block</h3>
+    <div class="modal-field"><label>Time</label><input type="time" id="newTime" value="08:00"></div>
+    <div class="modal-field"><label>Label</label><input type="text" id="newLabel" placeholder="e.g. Morning walk"></div>
+    <div class="modal-field"><label>Note</label><input type="text" id="newSub" placeholder="Optional detail"></div>
+    <div class="modal-field">
+      <label>Type</label>
+      <select id="newType">
+        <option value="rest">Personal</option>
+        <option value="study">Study</option>
+        <option value="class-block">Class</option>
+        <option value="travel-block">Transit</option>
+        <option value="pilates">Pilates</option>
+        <option value="deen">Deen</option>
+        <option value="read">Reading</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('addModal')">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmAddBlock()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- SURAH MODAL -->
+<div class="modal-overlay" id="surahModal">
+  <div class="modal">
+    <h3>Track a Surah</h3>
+    <input class="surah-search-inp" id="surahSearch" placeholder="Search by name or number…" oninput="filterSurahs()">
+    <div class="surah-select-list" id="surahSelectList"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="modal-btn cancel" onclick="closeModal('surahModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATE ───
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const now=new Date();
+document.getElementById('dateLabel').textContent=`${DAYS[now.getDay()]}, ${MONTHS_SHORT[now.getMonth()]} ${now.getDate()}`;
+
+// ─── HIJRI ───
+const HM=['Muharram','Safar',"Rabi' Al-Awwal","Rabi' Al-Thani",'Jumada Al-Awwal','Jumada Al-Thani','Rajab',"Sha'ban",'Ramadan','Shawwal',"Dhul Qi'dah",'Dhul Hijjah'];
+
+function toHijri(date){
+  const y=date.getFullYear(),m=date.getMonth()+1,d=date.getDate();
+  const jd=Math.floor((1461*(y+4800+Math.floor((m-14)/12)))/4)+Math.floor((367*(m-2-12*Math.floor((m-14)/12)))/12)-Math.floor((3*Math.floor((y+4900+Math.floor((m-14)/12))/100))/4)+d-32075;
+  const l=jd-1948440+10632,n=Math.floor((l-1)/10631),l2=l-10631*n+354;
+  const j=Math.floor((10985-l2)/5316)*Math.floor((50*l2)/17719)+Math.floor(l2/5670)*Math.floor((43*l2)/15238);
+  const l3=l2-Math.floor((30-j)/15)*Math.floor((17719*j)/50)-Math.floor(j/16)*Math.floor((15238*j)/43)+29;
+  return{d:l3-Math.floor((709*Math.floor((24*l3)/709))/24),m:Math.floor((24*l3)/709),y:30*n+j-30};
+}
+
+const todayH=toHijri(now);
+document.getElementById('hijriDate').textContent=`${todayH.d} ${HM[todayH.m-1]} ${todayH.y} AH`;
+
+// ─── DEFAULTS ───
+const DEFAULT_BLOCKS=[
+  {time:'5:00',ampm:'AM',label:'Fajr',sub:"Don't delay. This sets the tone.",type:'deen'},
+  {time:'7:00',ampm:'AM',label:'Wake up',sub:'Water. No phone for 5 min.',type:'rest'},
+  {time:'7:15',ampm:'AM',label:'Pilates',sub:'45 min — mat or reformer',type:'pilates'},
+  {time:'8:00',ampm:'AM',label:'Get ready + breakfast',sub:'Eat properly. This matters.',type:'rest'},
+  {time:'8:30',ampm:'AM',label:'Leave for uni',sub:'~1 hr transit',type:'travel-block'},
+  {time:'9:25',ampm:'AM',label:'Data Structures',sub:'C++ — be present, ask questions',type:'class-block'},
+  {time:'10:40',ampm:'AM',label:'Between-class study',sub:'Alternate: DS (Sun/Tue/Thu) · Big Data (Mon/Wed)',type:'study'},
+  {time:'12:15',ampm:'PM',label:'Big Data',sub:'Python — sit near front',type:'class-block'},
+  {time:'1:30',ampm:'PM',label:'Head home',sub:'~1 hr transit',type:'travel-block'},
+  {time:'2:30',ampm:'PM',label:'Lunch + real break',sub:"No phone studying. Let your brain breathe.",type:'rest'},
+  {time:'3:30',ampm:'PM',label:'Deep study block',sub:'2.5 hrs — opposite of what you did between classes',type:'study'},
+  {time:'6:00',ampm:'PM',label:'Done studying',sub:'Close the books. Evening is yours.',type:'rest'},
+  {time:'7:00',ampm:'PM',label:'Quran / Hifdh',sub:'30 min minimum. Review yesterday first.',type:'deen'},
+  {time:'8:00',ampm:'PM',label:'Wind down — read',sub:'A real book. No screens. This is sacred.',type:'read'},
+  {time:'9:00',ampm:'PM',label:'Evening Athkar',sub:"Don't skip this.",type:'deen'},
+  {time:'11:00',ampm:'PM',label:'Lights out (aim)',sub:'You study better rested.',type:'rest'},
+];
+
+const DEFAULT_ELEVATE=[
+  {cat:'Mind & Knowledge',items:[
+    {text:"Read 30 pages of a book you've been putting off",emoji:'📖'},
+    {text:'Watch one TED talk and write 3 takeaways',emoji:'🧠'},
+    {text:'Learn one new logical fallacy and find an example in the wild',emoji:'⚖️'},
+    {text:"Spend 20 min reading about a historical event you know nothing about",emoji:'🏛️'},
+    {text:'Solve a lateral thinking puzzle without looking up the answer',emoji:'🔍'},
+    {text:'Listen to a philosophy or history podcast episode',emoji:'🎧'},
+    {text:"Pick a country you've never thought about and read about its culture",emoji:'🌍'},
+    {text:'Read one long-form essay on something outside CS',emoji:'📰'},
+    {text:'Watch a documentary and note what surprised you',emoji:'🎬'},
+    {text:'Learn the etymology of 5 words you use often',emoji:'🔤'},
+    {text:'Read a Wikipedia rabbit hole for 30 min — follow every interesting link',emoji:'🕳️'},
+  ]},
+  {cat:'Creative',items:[
+    {text:'Sketch something in front of you — no erasing allowed, 15 min',emoji:'✏️'},
+    {text:'Write one page of a short story, starting mid-scene',emoji:'📝'},
+    {text:'Teach yourself one song on YouTube',emoji:'🎵'},
+    {text:'Design a poster in Canva for something that matters to you',emoji:'🎨'},
+    {text:'Write three haikus about your day',emoji:'🌸'},
+    {text:'Take 10 photos with intention — light, composition, subject',emoji:'📷'},
+    {text:'Write a letter to yourself to open in 6 months',emoji:'✉️'},
+    {text:'Draw a map of somewhere meaningful to you from memory',emoji:'🗺️'},
+    {text:'Write a recipe for something you love, with no measurements',emoji:'🍳'},
+    {text:'Rewrite a favourite scene from a book in a different genre',emoji:'📚'},
+  ]},
+  {cat:'Tech & Craft',items:[
+    {text:"Build something tiny in Python you'll actually use (timer, quiz, random picker)",emoji:'🐍'},
+    {text:"Learn one bash command you've never used",emoji:'💻'},
+    {text:'Read about one data structure and draw it by hand',emoji:'🌲'},
+    {text:'Reverse-engineer a UI you admire — sketch why it works',emoji:'🖥️'},
+    {text:'Write documentation for one of your own projects',emoji:'📋'},
+    {text:'Learn how one algorithm works, code it from scratch',emoji:'⚙️'},
+    {text:'Explore one open source repo on GitHub for 20 min',emoji:'🔧'},
+    {text:"Set up a dev environment for something you've never touched",emoji:'🛠️'},
+    {text:'Solve one LeetCode problem — describe your thought process out loud',emoji:'💡'},
+    {text:'Read one research paper abstract, summarize it in 5 sentences',emoji:'🔬'},
+    {text:'Build a simple data visualization on any dataset you find interesting',emoji:'📊'},
+  ]},
+  {cat:'Reading List',items:[
+    {text:'Read for 1 hour straight — no breaks, no phone nearby',emoji:'📖'},
+    {text:"Finish a chapter you've been putting off for weeks",emoji:'🔖'},
+    {text:'Re-read something you loved as a teenager',emoji:'💛'},
+    {text:'Read something that challenges a belief you hold',emoji:'🧐'},
+    {text:'Find a book in a genre you never read and give it 50 pages',emoji:'🌀'},
+    {text:'Read one Arabic text for 20 min — anything',emoji:'📜'},
+    {text:'Start a reading log — title, date started, one sentence per session',emoji:'📓'},
+    {text:'Read a poem slowly, twice, out loud',emoji:'🎭'},
+  ]},
+  {cat:'Body & Stillness',items:[
+    {text:'Walk somewhere new with no destination in mind',emoji:'🚶'},
+    {text:'Do a 10-min guided breathwork session',emoji:'🌬️'},
+    {text:"Cook or bake something you've never made before",emoji:'🍳'},
+    {text:'Stretch for 20 min while listening to music — no phone',emoji:'🧘'},
+    {text:'Sit outside for 30 min doing nothing digital',emoji:'☀️'},
+    {text:'Sleep 8 hours and log how you feel in the morning',emoji:'🌙'},
+    {text:'Drink only water for a full day and notice how you feel',emoji:'💧'},
+    {text:'Take a cold shower and sit with the discomfort',emoji:'🚿'},
+    {text:'Cook a whole meal from scratch, slowly, with no music',emoji:'🫕'},
+  ]},
+  {cat:'Character & Depth',items:[
+    {text:'Journal on: what kind of person do I want to be in 5 years?',emoji:'🪞'},
+    {text:"Call or voice note someone you haven't spoken to in a while",emoji:'📞'},
+    {text:'Do one thing today that slightly scares you (academically)',emoji:'🔥'},
+    {text:"Write down 10 things you're genuinely proud of — no minimizing",emoji:'🏆'},
+    {text:'Learn to say no to one thing this week and write why',emoji:'🚫'},
+    {text:"Research one woman in STEM whose work you'd actually want to do",emoji:'💡'},
+    {text:"Write 3 questions you have about the universe — don't google them yet",emoji:'🌌'},
+    {text:'Do something kind for someone without mentioning it',emoji:'🤍'},
+    {text:'Write a one-page honest letter to your past self',emoji:'💌'},
+    {text:'List 5 small daily choices that are building the person you want to become',emoji:'🌱'},
+    {text:"Evaluate your environment: what's distracting you? What can you change?",emoji:'🏠'},
+  ]},
+  {cat:'Social & Connection',items:[
+    {text:'Have a real conversation — no scrolling, full attention',emoji:'🤝'},
+    {text:'Cook a meal for someone and actually sit with them',emoji:'🍽️'},
+    {text:"Write a message to someone who influenced you but doesn't know it",emoji:'💬'},
+    {text:"Ask a parent or grandparent a question you've never asked them",emoji:'👵'},
+    {text:'Do something nice for a sibling without being asked',emoji:'💞'},
+    {text:'Write a handwritten note to someone you appreciate',emoji:'✍️'},
+  ]},
+];
+
+const DEFAULT_STUDY=[
+  {subject:'Data Structures (C++)',pill:'pill-ds',weeks:'Weeks 1–10 · ~1.5 hrs/day',items:[
+    {title:'C++ fundamentals refresh',sub:'Pointers, references, structs, memory — no shortcuts here',tag:'video'},
+    {title:'Arrays & dynamic arrays',sub:'Implement your own resizable array from scratch',tag:'practice'},
+    {title:'Linked lists (singly + doubly)',sub:'Draw each pointer operation before coding it',tag:'drill'},
+    {title:'Stacks & Queues',sub:'Implement both using arrays AND linked lists',tag:'practice'},
+    {title:'Recursion & the call stack',sub:'Visualize every recursive call on paper first',tag:'drill'},
+    {title:'Trees: BST + traversals',sub:'In-order, pre-order, post-order — all three from memory',tag:'practice'},
+    {title:'Heaps & priority queues',sub:'Understand heapify — build one manually',tag:'practice'},
+    {title:'Hash tables',sub:'Implement with separate chaining. Understand load factor.',tag:'practice'},
+    {title:'Sorting: merge, quick, heap sort',sub:'Code each. Know time complexity cold.',tag:'drill'},
+    {title:'Graphs: BFS + DFS',sub:'Adjacency list vs matrix. Both traversals.',tag:'practice'},
+    {title:'Past exam problem sets',sub:'One set per day in weeks 7–10 — no peeking at solutions first',tag:'drill'},
+    {title:'CS50x Week 5 (Data Structures)',sub:'Free. Dense. Worth it.',tag:'video'},
+  ]},
+  {subject:'Big Data (Python)',pill:'pill-bd',weeks:'Weeks 1–10 · ~1.5 hrs/day',items:[
+    {title:'Python fundamentals — no gaps',sub:'Lists, dicts, comprehensions, functions, OOP basics.',tag:'video'},
+    {title:'Pandas from scratch',sub:"Series, DataFrame, groupby, merge, pivot. Kaggle's free Pandas course.",tag:'video'},
+    {title:'NumPy fundamentals',sub:'Arrays, broadcasting, slicing — run every example yourself',tag:'practice'},
+    {title:'Data cleaning on a real dataset',sub:'Find a messy CSV on Kaggle, clean it completely. No tutorials.',tag:'drill'},
+    {title:'Matplotlib + Seaborn basics',sub:'Plot 5 chart types on data you find interesting',tag:'practice'},
+    {title:'SQL for data — crash course',sub:'SELECT, GROUP BY, JOINs, subqueries.',tag:'read'},
+    {title:'MapReduce concept + Hadoop basics',sub:"Understand map/reduce deeply first.",tag:'read'},
+    {title:'PySpark intro',sub:'DataFrames in Spark.',tag:'video'},
+    {title:'Intro to ML with scikit-learn',sub:"Linear regression, classification, train/test split.",tag:'video'},
+    {title:'Build one real analysis project',sub:'Dataset end-to-end: load → clean → explore → visualize → model.',tag:'drill'},
+    {title:'Redo all past assignment code yourself',sub:'Rewrite from scratch until it feels obvious',tag:'drill'},
+  ]},
+  {subject:'Habits that determine your grade',pill:'pill-habit',weeks:'Every week',items:[
+    {title:'Attempt problems before looking at solutions',sub:'Struggle is the mechanism. Looking it up first teaches you nothing.',tag:'drill'},
+    {title:'Type every code example from lecture yourself',sub:"Don't copy-paste. Not once.",tag:'drill'},
+    {title:'Weekly review: what did I not understand?',sub:'Write it every Thursday. Fix it that day or Sunday.',tag:'read'},
+    {title:'LeetCode Easy — one per day from Week 3',sub:'Alternate: Python one day, C++ the next',tag:'practice'},
+    {title:'Talk through a concept out loud',sub:"If you can't explain it simply, you don't know it yet",tag:'drill'},
+  ]},
+];
+
+const WIRD_DATA=[
+  {group:'Prayers',items:[
+    {id:'fajr',text:'Fajr',ar:'الفجر',count:''},
+    {id:'dhuhr',text:'Dhuhr',ar:'الظهر',count:''},
+    {id:'asr',text:'Asr',ar:'العصر',count:''},
+    {id:'maghrib',text:'Maghrib',ar:'المغرب',count:''},
+    {id:'isha',text:'Isha',ar:'العشاء',count:''},
+  ]},
+  {group:'Daily Athkar',items:[
+    {id:'morning_ath',text:'Morning Athkar',ar:'أذكار الصباح',count:'After Fajr'},
+    {id:'evening_ath',text:'Evening Athkar',ar:'أذكار المساء',count:'After Asr'},
+    {id:'sleep_dua',text:'Sleep duas',ar:'أذكار النوم',count:'Before sleep'},
+  ]},
+  {group:'Quran',items:[
+    {id:'quran_read',text:'Quran recitation',ar:'تلاوة القرآن',count:'30+ min'},
+    {id:'hifdh_rev',text:'Hifdh review',ar:'مراجعة الحفظ',count:'20+ min'},
+    {id:'new_hifdh',text:'New memorization',ar:'حفظ جديد',count:'New lines'},
+  ]},
+  {group:'Dhikr & Extra',items:[
+    {id:'istighfar',text:'Istighfar',ar:'الاستغفار',count:'×100'},
+    {id:'salawat',text:'Salawat on the Prophet ﷺ',ar:'الصلاة على النبي',count:'×100'},
+    {id:'tasbih',text:'Subhanallah · Alhamdulillah · Allahu Akbar',ar:'التسبيح',count:'×33 each'},
+    {id:'duha',text:"Duha prayer",ar:'صلاة الضحى',count:'2–8 rak\'ah'},
+  ]},
+];
+
+const SURAHS=[
+  {n:1,en:'Al-Fatihah',ar:'الفاتحة',v:7},
+  {n:2,en:'Al-Baqarah',ar:'البقرة',v:286},
+  {n:18,en:'Al-Kahf',ar:'الكهف',v:110},
+  {n:36,en:'Ya-Sin',ar:'يس',v:83},
+  {n:55,en:'Ar-Rahman',ar:'الرحمن',v:78},
+  {n:56,en:"Al-Waqi'ah",ar:'الواقعة',v:96},
+  {n:67,en:'Al-Mulk',ar:'الملك',v:30},
+  {n:78,en:"An-Naba'",ar:'النبأ',v:40},
+  {n:79,en:"An-Nazi'at",ar:'النازعات',v:46},
+  {n:80,en:"'Abasa",ar:'عبس',v:42},
+  {n:81,en:'At-Takwir',ar:'التكوير',v:29},
+  {n:82,en:'Al-Infitar',ar:'الانفطار',v:19},
+  {n:83,en:'Al-Mutaffifin',ar:'المطففين',v:36},
+  {n:84,en:'Al-Inshiqaq',ar:'الانشقاق',v:25},
+  {n:85,en:'Al-Buruj',ar:'البروج',v:22},
+  {n:86,en:'At-Tariq',ar:'الطارق',v:17},
+  {n:87,en:"Al-A'la",ar:'الأعلى',v:19},
+  {n:88,en:'Al-Ghashiyah',ar:'الغاشية',v:26},
+  {n:89,en:'Al-Fajr',ar:'الفجر',v:30},
+  {n:90,en:'Al-Balad',ar:'البلد',v:20},
+  {n:91,en:'Ash-Shams',ar:'الشمس',v:15},
+  {n:92,en:'Al-Layl',ar:'الليل',v:21},
+  {n:93,en:'Ad-Duhaa',ar:'الضحى',v:11},
+  {n:94,en:'Ash-Sharh',ar:'الشرح',v:8},
+  {n:95,en:'At-Tin',ar:'التين',v:8},
+  {n:96,en:"Al-'Alaq",ar:'العلق',v:19},
+  {n:97,en:'Al-Qadr',ar:'القدر',v:5},
+  {n:98,en:'Al-Bayyinah',ar:'البينة',v:8},
+  {n:99,en:'Az-Zalzalah',ar:'الزلزلة',v:8},
+  {n:100,en:"Al-'Adiyat",ar:'العاديات',v:11},
+  {n:101,en:"Al-Qari'ah",ar:'القارعة',v:11},
+  {n:102,en:'At-Takathur',ar:'التكاثر',v:8},
+  {n:103,en:"Al-'Asr",ar:'العصر',v:3},
+  {n:104,en:'Al-Humazah',ar:'الهمزة',v:9},
+  {n:105,en:'Al-Fil',ar:'الفيل',v:5},
+  {n:106,en:'Quraysh',ar:'قريش',v:4},
+  {n:107,en:"Al-Ma'un",ar:'الماعون',v:7},
+  {n:108,en:'Al-Kawthar',ar:'الكوثر',v:3},
+  {n:109,en:'Al-Kafirun',ar:'الكافرون',v:6},
+  {n:110,en:'An-Nasr',ar:'النصر',v:3},
+  {n:111,en:'Al-Masad',ar:'المسد',v:5},
+  {n:112,en:'Al-Ikhlas',ar:'الإخلاص',v:4},
+  {n:113,en:'Al-Falaq',ar:'الفلق',v:5},
+  {n:114,en:'An-Nas',ar:'الناس',v:6},
+];
+
+// Summer 2026 Islamic events
+const ISLAMIC_EVENTS=[
+  {name:'Eid Al-Adha',ar:'عيد الأضحى',date:'2026-06-05',hijri:'10 Dhul Hijjah 1447',color:'rose',desc:'Feast of sacrifice. Takbeer from Fajr.'},
+  {name:'Days of Tashreeq end',ar:'نهاية أيام التشريق',date:'2026-06-08',hijri:'13 Dhul Hijjah 1447',color:'gold',desc:'These 3 days are the best days of the year for dhikr.'},
+  {name:'Islamic New Year 1448 AH',ar:'رأس السنة الهجرية ١٤٤٨',date:'2026-07-03',hijri:'1 Muharram 1448',color:'rose',desc:'Reflect on the year. Make intentions.'},
+  {name:'Day of Ashura',ar:'يوم عاشوراء',date:'2026-07-12',hijri:'10 Muharram 1448',color:'sage',desc:"Fast this day. Moses' people were saved. Fast the 9th too."},
+  {name:'Rajab begins',ar:'أول رجب',date:'2026-12-20',hijri:'1 Rajab 1448',color:'gold',desc:'A sacred month. Increase in istighfar and supplication.'},
+];
+
+// ─── STORAGE ───
+const S=key=>JSON.parse(localStorage.getItem(key)||'null');
+const W=(key,v)=>localStorage.setItem(key,JSON.stringify(v));
+const todayKey=()=>`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+function getBlocks(){return S('ts_blocks')||DEFAULT_BLOCKS;}
+function saveBlocks(b){W('ts_blocks',b);}
+function getBlockDone(){return S('ts_day_done')||{};}
+function saveBlockDone(d){W('ts_day_done',d);}
+function getElevate(){return S('ts_elevate')||DEFAULT_ELEVATE;}
+function saveElevate(e){W('ts_elevate',e);}
+function getElevateDone(){return S('ts_elv_done')||{};}
+function saveElevateDone(d){W('ts_elv_done',d);}
+function getStudy(){return S('ts_study')||DEFAULT_STUDY;}
+function saveStudy(s){W('ts_study',s);}
+function getStudyDone(){return S('ts_study_done')||{};}
+function saveStudyDone(d){W('ts_study_done',d);}
+function getWirdDone(){return S('ts_wird_'+todayKey())||{};}
+function saveWirdDone(d){W('ts_wird_'+todayKey(),d);}
+function getSurahs(){return S('ts_surahs')||[];}
+function saveSurahs(s){W('ts_surahs',s);}
+
+// ─── PALETTE ───
+function applyPalette(p){
+  document.getElementById('app').setAttribute('data-theme',p||'');
+  document.querySelectorAll('.pal-opt').forEach(el=>{
+    const themes={'Parchment':'','Night Garden':'night','Desert':'desert','Ocean':'ocean','Emerald':'emerald'};
+    el.classList.toggle('selected',themes[el.querySelector('.pal-name').textContent]===(p||''));
+  });
+}
+function togglePalette(){document.getElementById('palettePanel').classList.toggle('open');}
+function setPalette(p){W('ts_palette',p);applyPalette(p);document.getElementById('palettePanel').classList.remove('open');}
+applyPalette(S('ts_palette')||'');
+
+document.addEventListener('click',e=>{
+  const pp=document.getElementById('palettePanel');
+  if(pp.classList.contains('open')&&!pp.contains(e.target)&&!e.target.closest('.icon-btn'))pp.classList.remove('open');
+});
+
+// ─── EDIT MODE ───
+let editMode=false;
+function toggleEdit(){
+  editMode=!editMode;
+  const btn=document.getElementById('editToggle');
+  btn.textContent=editMode?'✓ Done':'✏ Edit';
+  btn.classList.toggle('active',editMode);
+  document.getElementById('app').classList.toggle('editing',editMode);
+  if(!editMode)saveFromDOM();
+  renderTimeline();renderElevate();renderStudy();
+}
+
+function saveFromDOM(){
+  const blocks=getBlocks();
+  document.querySelectorAll('.time-block').forEach((el,i)=>{
+    if(!blocks[i])return;
+    const t=el.querySelector('.inp-time'),l=el.querySelector('.inp-label'),s=el.querySelector('.inp-sub'),tp=el.querySelector('.edit-select');
+    if(t)blocks[i].time=t.value;
+    if(l)blocks[i].label=l.value;
+    if(s)blocks[i].sub=s.value;
+    if(tp)blocks[i].type=tp.value;
+  });
+  saveBlocks(blocks);
+  const elv=getElevate();
+  document.querySelectorAll('.elevate-category').forEach((catEl,ci)=>{
+    if(!elv[ci])return;
+    const cn=catEl.querySelector('.cat-name-edit');
+    if(cn)elv[ci].cat=cn.value;
+    catEl.querySelectorAll('.ei-edit-input').forEach((inp,ii)=>{if(elv[ci].items[ii])elv[ci].items[ii].text=inp.value;});
+  });
+  saveElevate(elv);
+  const study=getStudy();
+  document.querySelectorAll('.study-subject').forEach((subEl,si)=>{
+    if(!study[si])return;
+    subEl.querySelectorAll('.study-item').forEach((itemEl,ii)=>{
+      if(!study[si].items[ii])return;
+      const t=itemEl.querySelector('.si-title-input'),s=itemEl.querySelector('.si-sub-input');
+      if(t)study[si].items[ii].title=t.value;
+      if(s)study[si].items[ii].sub=s.value;
+    });
+  });
+  saveStudy(study);
+}
+
+// ─── NAV ───
+function switchPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+function switchSub(pageId,subId,btnId){
+  const page=document.getElementById(pageId);
+  page.querySelectorAll('.sub-page').forEach(p=>p.classList.remove('active'));
+  page.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(subId).classList.add('active');
+  document.getElementById(btnId).classList.add('active');
+}
+
+// ─── TIMELINE ───
+const TAG_MAP={class:'tag-class',study:'tag-study',travel:'tag-travel',rest:'tag-rest',pilates:'tag-pilates',deen:'tag-deen',read:'tag-read'};
+const TAG_LABEL={'class-block':'Class',study:'Study','travel-block':'Transit',rest:'Personal',pilates:'Pilates',deen:'Deen',read:'Reading'};
+
+function typeKey(t){if(t==='class-block')return'class';if(t==='travel-block')return'travel';return t;}
+
+function renderTimeline(){
+  const tl=document.getElementById('timeline');
+  const blocks=getBlocks(),done=getBlockDone();
+  tl.innerHTML='';
+  const typeOpts=Object.entries(TAG_LABEL).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  blocks.forEach((b,i)=>{
+    const isDone=!!done[i],isLast=i===blocks.length-1;
+    const tc=TAG_MAP[typeKey(b.type)]||'tag-rest',tl2=TAG_LABEL[b.type]||'Personal';
+    const div=document.createElement('div');
+    div.className=`time-block ${b.type||''} ${isDone?'done':''} ${editMode?'edit-mode':''}`;
+    const selOpts=Object.entries(TAG_LABEL).map(([v,l])=>`<option value="${v}"${b.type===v?' selected':''}>${l}</option>`).join('');
+    div.innerHTML=`
+      <div class="time-col"><span class="time-stamp">${b.time}</span><span class="time-ampm">${b.ampm||''}</span></div>
+      <div class="ribbon-col"><div class="dot"></div>${!isLast?'<div class="ribbon-line"></div>':''}</div>
+      <div class="block-content">
+        <span class="block-tag ${tc}">${tl2}</span>
+        <span class="block-label">${b.label}</span>
+        <span class="block-sub">${b.sub||''}</span>
+        <div class="edit-row">
+          <input class="edit-input inp-time" type="text" value="${b.time}" placeholder="7:00">
+          <select class="edit-select">${selOpts}</select>
+          <input class="edit-input inp-label" value="${b.label}" placeholder="Label">
+          <input class="edit-input inp-sub" value="${b.sub||''}" placeholder="Note">
+          <button class="del-btn" onclick="deleteBlock(${i})">×</button>
+        </div>
+      </div>`;
+    if(!editMode)div.onclick=()=>toggleBlock(i);
+    document.getElementById('timeline').appendChild(div);
+  });
+  updateProgress();
+}
+
+function toggleBlock(i){const d=getBlockDone();d[i]=!d[i];saveBlockDone(d);renderTimeline();}
+function deleteBlock(i){
+  const b=getBlocks();b.splice(i,1);saveBlocks(b);
+  const d=getBlockDone(),nd={};
+  Object.keys(d).forEach(k=>{const ki=+k;if(ki<i)nd[ki]=d[ki];else if(ki>i)nd[ki-1]=d[ki];});
+  saveBlockDone(nd);renderTimeline();
+}
+function updateProgress(){
+  const b=getBlocks(),d=getBlockDone(),c=Object.values(d).filter(Boolean).length;
+  document.getElementById('progressLabel').textContent=`${c} / ${b.length} done`;
+  document.getElementById('progressFill').style.width=`${b.length?(c/b.length)*100:0}%`;
+}
+function resetDay(){if(confirm("Reset today's tracker?")){saveBlockDone({});renderTimeline();}}
+function openAddBlock(){document.getElementById('addModal').classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function confirmAddBlock(){
+  const tv=document.getElementById('newTime').value,label=document.getElementById('newLabel').value.trim();
+  if(!label){alert('Enter a label.');return;}
+  const sub=document.getElementById('newSub').value.trim(),type=document.getElementById('newType').value;
+  let dt=tv,ampm='AM';
+  if(tv){const[h,m]=tv.split(':').map(Number);ampm=h>=12?'PM':'AM';dt=`${h%12||12}:${String(m).padStart(2,'0')}`;}
+  const b=getBlocks();
+  b.push({time:dt,ampm,label,sub,type});
+  b.sort((a,c)=>{
+    const toM=t=>{const[h,m]=t.split(':').map(Number);return h*60+(m||0);};
+    const mA=a.ampm==='PM'&&!a.time.startsWith('12')?toM(a.time)+720:a.ampm==='AM'&&a.time.startsWith('12')?toM(a.time)-720:toM(a.time);
+    const mB=c.ampm==='PM'&&!c.time.startsWith('12')?toM(c.time)+720:c.ampm==='AM'&&c.time.startsWith('12')?toM(c.time)-720:toM(c.time);
+    return mA-mB;
+  });
+  saveBlocks(b);closeModal('addModal');renderTimeline();
+  document.getElementById('newLabel').value='';document.getElementById('newSub').value='';
+}
+
+// ─── ELEVATE ───
+function renderElevate(){
+  const elv=getElevate(),done=getElevateDone();
+  let html='',gi=0;
+  elv.forEach((cat,ci)=>{
+    html+=`<div class="elevate-category" data-ci="${ci}"><div class="cat-label">
+      <span class="cat-label-text">${cat.cat}</span>
+      <input class="cat-name-edit" value="${cat.cat.replace(/"/g,'&quot;')}" placeholder="Category">
+      <button class="cat-del-btn" onclick="deleteCat(${ci})">× remove</button>
+    </div><div class="elevate-grid">`;
+    cat.items.forEach((item,ii)=>{
+      const isDone=!!done[gi];
+      html+=`<div class="elevate-item${isDone?' done':''}" data-gi="${gi}">
+        <div class="ei-check"><div class="ei-check-inner"></div></div>
+        <span class="ei-text">${item.text}</span>
+        <input class="ei-edit-input" value="${item.text.replace(/"/g,'&quot;')}" placeholder="Activity…">
+        <span class="ei-emoji">${item.emoji||'•'}</span>
+        <button class="ei-del" onclick="event.stopPropagation();deleteElevateItem(${ci},${ii})">×</button>
+      </div>`;gi++;
+    });
+    html+=`</div><button class="add-elevate-btn" onclick="addElevateItem(${ci})">+ Add item</button></div>`;
+  });
+  document.getElementById('elevate-content').innerHTML=html;
+  if(!editMode){
+    document.querySelectorAll('.elevate-item').forEach(el=>{
+      el.onclick=()=>toggleElevate(+el.dataset.gi);
+    });
+  }
+}
+function toggleElevate(gi){const d=getElevateDone();d[gi]=!d[gi];saveElevateDone(d);renderElevate();}
+function deleteElevateItem(ci,ii){const e=getElevate();e[ci].items.splice(ii,1);saveElevate(e);renderElevate();}
+function deleteCat(ci){if(!confirm('Remove category?'))return;const e=getElevate();e.splice(ci,1);saveElevate(e);renderElevate();}
+function addElevateItem(ci){const t=prompt('New activity:');if(!t)return;const e=getElevate();e[ci].items.push({text:t,emoji:'✦'});saveElevate(e);renderElevate();}
+function addCategory(){const n=prompt('Category name:');if(!n)return;const e=getElevate();e.push({cat:n,items:[]});saveElevate(e);renderElevate();}
+
+// ─── STUDY ───
+const TC={video:'si-tag-video',practice:'si-tag-practice',read:'si-tag-read',drill:'si-tag-drill'};
+function renderStudy(){
+  const study=getStudy(),done=getStudyDone();
+  let html='',gi=0;
+  study.forEach((sub,si)=>{
+    html+=`<div class="study-subject"><div class="subject-header"><span class="subject-pill ${sub.pill||'pill-ds'}">${sub.subject}</span><span class="subject-weeks">${sub.weeks}</span></div>`;
+    sub.items.forEach((item,ii)=>{
+      const isDone=!!done[gi],tc=TC[item.tag]||'si-tag-drill';
+      html+=`<div class="study-item${isDone?' done':''}" data-gi="${gi}">
+        <div class="si-check">${isDone?'✓':''}</div>
+        <div class="si-body"><div class="si-title">${item.title}</div><div class="si-sub">${item.sub}</div><span class="si-tag ${tc}">${item.tag}</span></div>
+        <div class="si-edit-wrap">
+          <input class="si-edit-input si-title-input" value="${item.title.replace(/"/g,'&quot;')}" placeholder="Title">
+          <input class="si-edit-input si-sub-input" value="${item.sub.replace(/"/g,'&quot;')}" placeholder="Description">
+        </div>
+        <button class="si-del" onclick="event.stopPropagation();deleteStudyItem(${si},${ii})">×</button>
+      </div>`;gi++;
+    });
+    html+=`<button class="add-study-btn" onclick="addStudyItem(${si})">+ Add topic</button></div>`;
+  });
+  document.getElementById('study-content').innerHTML=html;
+  if(!editMode){
+    document.querySelectorAll('.study-item').forEach(el=>el.onclick=()=>toggleStudy(+el.dataset.gi));
+  }
+}
+function toggleStudy(gi){const d=getStudyDone();d[gi]=!d[gi];saveStudyDone(d);renderStudy();}
+function deleteStudyItem(si,ii){const s=getStudy();s[si].items.splice(ii,1);saveStudy(s);renderStudy();}
+function addStudyItem(si){
+  const title=prompt('Topic title:');if(!title)return;
+  const sub=prompt('Description (optional):')||'';
+  const s=getStudy();s[si].items.push({title,sub,tag:'drill'});saveStudy(s);renderStudy();
+}
+
+// ─── WIRD ───
+function renderWird(){
+  const done=getWirdDone();
+  const allItems=WIRD_DATA.flatMap(g=>g.items);
+  const doneCount=allItems.filter(i=>done[i.id]).length;
+  let html=`<div class="wird-day-title">Daily Wird — ${DAYS[now.getDay()]}</div>`;
+  WIRD_DATA.forEach(group=>{
+    html+=`<div class="wird-group"><div class="wird-group-label">${group.group}</div>`;
+    group.items.forEach(item=>{
+      const isDone=!!done[item.id];
+      html+=`<div class="wird-item${isDone?' done':''}" onclick="toggleWird('${item.id}')">
+        <div class="wi-check">${isDone?'✓':''}</div>
+        <div style="flex:1">
+          <div class="wi-text">${item.text}</div>
+          <div class="wi-ar">${item.ar}</div>
+        </div>
+        <div class="wi-count">${item.count}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+=`<div class="wird-progress">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px"><span>Today's wird</span><span>${doneCount}/${allItems.length}</span></div>
+    <div class="hifdh-bar"><div class="hifdh-bar-fill" style="width:${allItems.length?(doneCount/allItems.length)*100:0}%"></div></div>
+  </div>
+  <button class="wird-reset" onclick="resetWird()">↺ Reset wird</button>`;
+  document.getElementById('wirdContent').innerHTML=html;
+}
+function toggleWird(id){const d=getWirdDone();d[id]=!d[id];saveWirdDone(d);renderWird();}
+function resetWird(){if(confirm("Reset today's wird?")){saveWirdDone({});renderWird();}}
+
+// ─── HIFDH ───
+const SC=['not-started','memorizing','reviewing','done'];
+const SL={'not-started':'Not started','memorizing':'Memorizing…','reviewing':'Reviewing','done':'Done ✓'};
+const SCls={'not-started':'s-not','memorizing':'s-mem','reviewing':'s-rev','done':'s-done'};
+
+function renderHifdh(){
+  const surahs=getSurahs(),doneCount=surahs.filter(s=>s.status==='done').length;
+  document.getElementById('hifdhCount').textContent=doneCount;
+  document.getElementById('hifdhLabel').textContent=`${doneCount} of 6 surahs done`;
+  document.getElementById('hifdhBar').style.width=`${Math.min(100,(doneCount/6)*100)}%`;
+  let html='';
+  surahs.forEach((s,i)=>{
+    const sr=SURAHS.find(x=>x.n===s.num)||{n:s.num,en:'Unknown',ar:'',v:''};
+    html+=`<div class="surah-item">
+      <div class="surah-num">${sr.n}</div>
+      <div class="surah-name">
+        <div class="surah-name-en">${sr.en}</div>
+        <div class="surah-name-ar">${sr.ar}</div>
+        <div class="surah-ayahs">${sr.v} ayahs</div>
+      </div>
+      <button class="surah-status-btn ${SCls[s.status]}" onclick="cycleStatus(${i})">${SL[s.status]}</button>
+      <button class="surah-rm" onclick="removeSurah(${i})">×</button>
+    </div>`;
+  });
+  document.getElementById('surahList').innerHTML=html;
+}
+function cycleStatus(i){const s=getSurahs();s[i].status=SC[(SC.indexOf(s[i].status)+1)%SC.length];saveSurahs(s);renderHifdh();}
+function removeSurah(i){const s=getSurahs();s.splice(i,1);saveSurahs(s);renderHifdh();}
+function openSurahModal(){document.getElementById('surahSearch').value='';renderSurahList('');document.getElementById('surahModal').classList.add('open');}
+function filterSurahs(){renderSurahList(document.getElementById('surahSearch').value.toLowerCase());}
+function renderSurahList(f){
+  const tracked=new Set(getSurahs().map(s=>s.num));
+  const list=SURAHS.filter(s=>!f||s.en.toLowerCase().includes(f)||s.ar.includes(f)||String(s.n).includes(f));
+  document.getElementById('surahSelectList').innerHTML=list.map(s=>`
+    <div class="ssi${tracked.has(s.n)?' sel':''}" onclick="toggleSurahTrack(${s.n})">
+      <div><div class="ssi-en">${s.en}</div><div class="ssi-ar">${s.ar}</div><div class="ssi-meta">Surah ${s.n} · ${s.v} ayahs</div></div>
+      <span style="color:${tracked.has(s.n)?'var(--sage)':'var(--border)'};font-size:18px">${tracked.has(s.n)?'✓':''}</span>
+    </div>`).join('');
+}
+function toggleSurahTrack(num){
+  const s=getSurahs(),idx=s.findIndex(x=>x.num===num);
+  if(idx>=0)s.splice(idx,1);else s.push({num,status:'not-started'});
+  saveSurahs(s);renderSurahList(document.getElementById('surahSearch').value.toLowerCase());renderHifdh();
+}
+
+// ─── HIJRI CALENDAR ───
+let calDate=new Date(now.getFullYear(),now.getMonth(),1);
+const evMap=new Map(ISLAMIC_EVENTS.map(e=>{const d=new Date(e.date);return[`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`,e];}));
+
+function renderHijriCal(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  const hFirst=toHijri(first);
+  let html=`<div class="month-nav">
+    <button class="nav-btn" onclick="changeCalMonth(-1)">‹</button>
+    <div class="month-nav-title">
+      <div class="greg">${MONTHS_SHORT[m]} ${y}</div>
+      <div class="hijri-sub">${HM[hFirst.m-1]} ${hFirst.y} AH</div>
+    </div>
+    <button class="nav-btn" onclick="changeCalMonth(1)">›</button>
+  </div>
+  <div class="cal-grid">
+    ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div class="cal-dh">${d}</div>`).join('')}`;
+  for(let i=0;i<first.getDay();i++)html+=`<div></div>`;
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(y,m,d),hd=toHijri(date);
+    const isToday=d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear();
+    const key=`${y}-${m}-${d}`,ev=evMap.get(key);
+    html+=`<div class="cal-day${isToday?' today':''}${ev?' has-event':''}${ev&&ev.color==='rose'?' event-rose':''}" title="${ev?ev.name:''}">
+      <span class="g">${d}</span><span class="h">${hd.d}</span>
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('hijriCal').innerHTML=html;
+
+  let evHtml=`<div class="event-section-label">Islamic Events — Summer 2026</div>`;
+  ISLAMIC_EVENTS.forEach(ev=>{
+    const d=new Date(ev.date);
+    evHtml+=`<div class="event-item">
+      <div class="event-dot ev-${ev.color}"></div>
+      <div class="event-info">
+        <div class="ev-name">${ev.name}</div>
+        <div class="ev-ar">${ev.ar}</div>
+        <div class="ev-date">${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} · ${ev.hijri}</div>
+        <div class="ev-desc">${ev.desc}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('eventsList').innerHTML=evHtml;
+}
+function changeCalMonth(dir){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);renderHijriCal();}
+
+// ─── INIT ───
+renderTimeline();renderElevate();renderStudy();renderWird();renderHifdh();renderHijriCal();
+
+// ─── PWA ───
+(function(){
+  const manifest={name:'thysummer',short_name:'thysummer',start_url:'.',display:'standalone',background_color:'#1a1a2e',theme_color:'#1a1a2e'};
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+  if('serviceWorker' in navigator){
+    const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>clients.claim());self.addEventListener('fetch',e=>e.respondWith(caches.open('ts1').then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;})))));`;
+    const swBlob=new Blob([sw],{type:'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
